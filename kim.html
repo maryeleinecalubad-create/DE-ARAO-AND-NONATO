@@ -1,0 +1,739 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCC Secure - Management Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --pcc-maroon: #802340; --pcc-bg: #F8F9FA; --pcc-border: #E8E5E6; --pcc-text: #2C2C2C; --pcc-muted: #7D7D7D; --pcc-light-pink: #FDF2F5; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--pcc-bg); color: var(--pcc-text); height: 100vh; overflow: hidden; width: 100vw; }
+        .app-screen { display: none; width: 100vw; height: 100vh; }
+        .app-screen.active { display: flex; }
+        #screen-splash { background: var(--pcc-maroon); color: #FFF; flex-direction: column; align-items: center; justify-content: center; }
+        .seal-circle { width: 220px; height: 220px; border: 3px dashed rgba(255,255,255,0.4); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 30px; }
+        .btn-start { background: #E6D2D7; color: var(--pcc-maroon); border: none; padding: 12px 36px; font-size: 15px; font-weight: 700; border-radius: 20px; cursor: pointer; }
+        #screen-login { background: #FFF; }
+        .login-banner { flex: 1.2; background: var(--pcc-maroon); color: #FFF; padding: 50px; display: flex; flex-direction: column; justify-content: space-between; }
+        .login-form-area { flex: 0.8; display: flex; align-items: center; justify-content: center; padding: 40px; }
+        .login-box { width: 100%; max-width: 340px; }
+        .login-box h2 { color: var(--pcc-maroon); font-size: 30px; margin-bottom: 20px; font-weight: 800; }
+        .field { margin-bottom: 16px; }
+        .field label { font-size: 11px; color: var(--pcc-muted); display: block; margin-bottom: 6px; font-weight: 600; }
+        .field input { width: 100%; padding: 11px; border: 1px solid var(--pcc-border); border-radius: 8px; font-size: 13px; outline: none; }
+        .pw-wrapper { position: relative; }
+        .pw-wrapper i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #888; cursor: pointer; }
+        .btn-submit { width: 100%; background: var(--pcc-maroon); color: #FFF; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .portal-layout { display: flex; width: 100vw; height: 100vh; position: relative; }
+        .sidebar { width: 260px; background: var(--pcc-maroon); color: #FFF; padding: 24px 18px; display: flex; flex-direction: column; flex-shrink: 0; }
+        .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .user-card { background: rgba(0,0,0,0.15); padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .user-card img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+        .nav-list { list-style: none; }
+        .nav-item a { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.85); text-decoration: none; padding: 11px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 4px; }
+        .nav-item.active a, .nav-item a:hover { background: rgba(255,255,255,0.2); color: #FFF; font-weight: 700; }
+        .sidebar-footer { margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 14px; font-size: 11px; opacity: 0.7; }
+        .main-workspace { flex: 1; padding: 24px 36px; overflow-y: auto; position: relative; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .top-actions { display: flex; align-items: center; gap: 12px; }
+        .btn-notif { background: #FFF; border: 1px solid var(--pcc-border); width: 38px; height: 38px; border-radius: 50%; cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center; }
+        .btn-notif .dot { position: absolute; top: 7px; right: 8px; width: 6px; height: 6px; background: red; border-radius: 50%; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .dash-banner { background: var(--pcc-maroon); color: #FFF; border-radius: 18px; padding: 32px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .dash-banner h1 { font-size: 32px; margin: 6px 0; font-weight: 800; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+        .metric-card { background: #FFF; border: 1px solid var(--pcc-border); border-radius: 12px; padding: 18px; }
+        .metric-card h3 { font-size: 26px; color: var(--pcc-maroon); font-weight: 800; }
+        .profile-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+        .prof-card-left { background: var(--pcc-maroon); color: #FFF; border-radius: 16px; padding: 24px; text-align: center; }
+        .prof-card-left img { width: 100px; height: 100px; border-radius: 50%; margin: 16px 0; object-fit: cover; }
+        .prof-card-right { background: #FFF; border: 1px solid var(--pcc-border); border-radius: 16px; padding: 24px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 16px; }
+        .data-card { background: #FFF; border: 1px solid var(--pcc-border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+        .custom-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .custom-table th, .custom-table td { padding: 12px; border-bottom: 1px solid var(--pcc-border); text-align: left; font-size: 12px; }
+        .custom-table th { color: var(--pcc-muted); font-weight: 600; }
+        .emp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+        .emp-card { border-radius: 14px; padding: 24px 16px; color: #FFF; text-align: center; cursor: pointer; transition: transform 0.2s; }
+        .emp-card:hover { transform: translateY(-3px); }
+        .emp-card.c-brown { background: #794839; }
+        .emp-card.c-purple { background: #6A50A7; }
+        .emp-card.c-green { background: #1B7A2B; }
+        .emp-card img { width: 72px; height: 72px; border-radius: 50%; margin-bottom: 10px; object-fit: cover; }
+        .eval-hero { background: var(--pcc-maroon); color: #FFF; border-radius: 16px; padding: 24px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .eval-box { background: var(--pcc-light-pink); border: 1px solid var(--pcc-border); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .eval-box.yellow { background: #FFFDE7; }
+        .eval-num { font-size: 22px; font-weight: 800; color: var(--pcc-text); }
+        .badge-status { padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-block; }
+        .st-present { background: #C8E6C9; color: #2E7D32; }
+        .st-late { background: #FFE0B2; color: #E65100; }
+        .st-leave { background: #E1BEE7; color: #6A1B9A; }
+        .notif-dropdown { position: absolute; top: 70px; right: 36px; width: 340px; background: #FFF; border: 1px solid var(--pcc-border); border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: none; z-index: 100; }
+        .notif-dropdown.active { display: block; }
+        .notif-header { padding: 12px 16px; border-bottom: 1px solid var(--pcc-border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; }
+        .notif-item { padding: 12px 16px; border-bottom: 1px solid var(--pcc-border); cursor: pointer; display: flex; gap: 12px; align-items: center; }
+        .notif-item:hover { background: #F8F8F8; }
+        .notif-icon-badge { width: 30px; height: 30px; background: var(--pcc-maroon); color: #FFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 200; }
+        .modal-overlay.active { display: flex; }
+        .modal-card { width: 460px; background: #FFF; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.25); }
+        .modal-head { background: #E8D5DC; color: var(--pcc-maroon); padding: 16px; display: flex; gap: 12px; align-items: center; }
+        .modal-body { padding: 20px; font-size: 13px; line-height: 1.5; }
+        .modal-foot { padding: 14px 20px; background: #FAFAFA; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--pcc-border); }
+        .btn-modal { padding: 8px 18px; border-radius: 6px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; }
+        .btn-approve { background: var(--pcc-maroon); color: #FFF; }
+        .btn-close { background: #E0E0E0; color: #333; }
+        .toast-notif { position: fixed; bottom: 24px; right: 24px; background: #1B5E20; color: #FFF; padding: 14px 22px; border-radius: 10px; font-size: 12px; font-weight: 700; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); z-index: 300; }
+        .toast-notif.active { display: flex; }
+        .demo-bar { background: #FCE8EF; color: var(--pcc-maroon); padding: 10px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="screen-splash" class="app-screen active">
+        <div class="seal-circle">
+            <i class="fa-solid fa-shield-halved" style="font-size: 64px; margin-bottom: 12px;"></i>
+            <h2 style="letter-spacing: 2px;">PCC SECURE</h2>
+        </div>
+        <button class="btn-start" id="btnGetStarted">Get Started</button>
+    </div>
+
+    <div id="screen-login" class="app-screen">
+        <div class="login-banner">
+            <div class="brand">
+                <i class="fa-solid fa-shield-halved" style="font-size: 24px;"></i>
+                <h2>PCC SECURE</h2>
+            </div>
+            <div>
+                <h1 style="font-size: 38px; font-weight: 800;">Welcome!</h1>
+                <p style="font-size: 13px; opacity: 0.85;">Please enter your credentials below to access your account</p>
+            </div>
+        </div>
+        <div class="login-form-area">
+            <div class="login-box">
+                <h2>Log In</h2>
+                <form id="loginForm">
+                    <div class="field">
+                        <label>Email Account/Ms Acc</label>
+                        <input type="email" value="Col.Rizza.Cuevas@pccnet.gov.ph" required>
+                    </div>
+                    <div class="field">
+                        <label>Password</label>
+                        <div class="pw-wrapper">
+                            <input type="password" id="passInput" value="cuevas123" required>
+                            <i class="fa-regular fa-eye-slash" id="togglePass"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-portal" class="app-screen">
+        <div class="portal-layout">
+            <aside class="sidebar">
+                <div class="brand">
+                    <i class="fa-solid fa-shield-halved" style="font-size: 20px;"></i>
+                    <h2>PCC Secure</h2>
+                </div>
+                <div class="user-card">
+                    <img id="usr-img" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120" alt="Avatar">
+                    <div>
+                        <h4 id="usr-name" style="font-size: 13px; font-weight: 700;">Rizza Cuevas</h4>
+                        <span id="usr-role" style="font-size: 10px; opacity: 0.8;">HR Administrator</span>
+                    </div>
+                </div>
+                <ul class="nav-list">
+                    <li class="nav-item active" data-tab="tab-home"><a href="#"><i class="fa-solid fa-house"></i> Home</a></li>
+                    <li class="nav-item" data-tab="tab-profile" id="m-profile"><a href="#"><i class="fa-solid fa-user"></i> My Profile</a></li>
+                    <li class="nav-item" data-tab="tab-schedule"><a href="#"><i class="fa-solid fa-calendar-days"></i> My Schedule</a></li>
+                    <li class="nav-item" data-tab="tab-salary" id="m-salary" style="display:none;"><a href="#"><i class="fa-solid fa-wallet"></i> Salary</a></li>
+                    <li class="nav-item" data-tab="tab-employees" id="m-emp"><a href="#"><i class="fa-solid fa-users"></i> Employees</a></li>
+                    <li class="nav-item" data-tab="tab-eval"><a href="#"><i class="fa-solid fa-chart-line"></i> Employees Evaluation</a></li>
+                    <li class="nav-item" data-tab="tab-attendance"><a href="#"><i class="fa-solid fa-clock"></i> Attendance</a></li>
+                    <li class="nav-item" id="btnLogout" style="margin-top: 24px;"><a href="#"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+                </ul>
+                <div class="sidebar-footer">
+                    <p><strong>Pasig Catholic College</strong></p>
+                    <p>Secure Management Portal</p>
+                </div>
+            </aside>
+
+            <main class="main-workspace">
+                <header class="top-header">
+                    <div>
+                        <span style="font-size: 11px; color: var(--pcc-maroon); font-weight: 700;">Employee Management</span>
+                        <h2 id="pageTitle" style="font-size: 22px; font-weight: 800;">Command Center</h2>
+                        <p id="pageSub" style="font-size: 12px; color: var(--pcc-muted);">Here's what is happening across PCC today.</p>
+                    </div>
+                    <div class="top-actions">
+                        <button class="btn-notif" id="btnNotifTrigger"><i class="fa-regular fa-bell"></i><span class="dot"></span></button>
+                        <img id="usr-top-img" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;">
+                    </div>
+                </header>
+
+                <div class="notif-dropdown" id="notifMenu">
+                    <div class="notif-header">
+                        <span>Notification</span>
+                        <span style="color: var(--pcc-maroon); cursor: pointer;">Mark all read</span>
+                    </div>
+                    <div class="notif-item" onclick="openModal('m-leave')">
+                        <div class="notif-icon-badge">AA</div>
+                        <div>
+                            <p style="font-size: 11px; font-weight: 700;">Sick Leave Request</p>
+                            <p style="font-size: 10px; color: #666;">Submitted a sick leave application...</p>
+                        </div>
+                    </div>
+                    <div class="notif-item" onclick="openModal('m-anomaly')">
+                        <div class="notif-icon-badge">AA</div>
+                        <div>
+                            <p style="font-size: 11px; font-weight: 700;">Attendance Anomaly Alert</p>
+                            <p style="font-size: 10px; color: #666;">High rate frequency detected...</p>
+                        </div>
+                    </div>
+                    <div class="notif-item" onclick="openModal('m-eval')">
+                        <div class="notif-icon-badge">HR</div>
+                        <div>
+                            <p style="font-size: 11px; font-weight: 700;">Q4 Performance Evaluation Due</p>
+                            <p style="font-size: 10px; color: #666;">Quarterly performance evaluation due...</p>
+                        </div>
+                    </div>
+                    <div class="notif-item" onclick="openModal('m-memo')">
+                        <div class="notif-icon-badge">VP</div>
+                        <div>
+                            <p style="font-size: 11px; font-weight: 700;">General Faculty Meeting Memorandum</p>
+                            <p style="font-size: 10px; color: #666;">All faculty members requested...</p>
+                        </div>
+                    </div>
+                    <div class="notif-item" onclick="openModal('m-sec')">
+                        <div class="notif-icon-badge">IT</div>
+                        <div>
+                            <p style="font-size: 11px; font-weight: 700;">Security Policy Update</p>
+                            <p style="font-size: 10px; color: #666;">Two-Factor Authentication required...</p>
+                        </div>
+                    </div>
+                    <div class="notif-item" onclick="openModal('m-vacleave')">
+                        <div class="notif-icon-badge">ER</div>
+                        <div>
+                            <p style="font-size: 11px; font-weight: 700;">Vacation Leave Approved</p>
+                            <p style="font-size: 10px; color: #666;">Vacation leave for Nov 2-4 approved...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <section id="tab-home" class="tab-panel active">
+                    <div class="dash-banner">
+                        <div>
+                            <span style="font-size: 10px; letter-spacing: 1px; opacity: 0.8; font-weight: 700;">PASIG CATHOLIC COLLEGE</span>
+                            <h1 id="welcomeText">WELCOME TO<br>PCC Secure</h1>
+                            <p style="font-size: 12px; opacity: 0.85;">A safe and efficient space for our people, records and shared mission.</p>
+                            <button style="background: #FFF; color: var(--pcc-maroon); border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; margin-top: 16px; cursor: pointer;">Explore your workspace &gt;</button>
+                        </div>
+                        <i class="fa-solid fa-shield-halved" style="font-size: 80px; opacity: 0.3;"></i>
+                    </div>
+
+                    <div class="grid-3" id="admin-metrics">
+                        <div class="metric-card"><h3>128</h3><p>Active Employees</p></div>
+                        <div class="metric-card"><h3>96 %</h3><p>Attendance rate</p></div>
+                        <div class="metric-card"><h3>12</h3><p>Evaluation due</p></div>
+                    </div>
+
+                    <div class="grid-4" id="faculty-cards" style="display: none;">
+                        <div class="metric-card">
+                            <span style="font-size: 10px; color: var(--pcc-muted); font-weight: 700;">Next class</span>
+                            <p style="font-weight: 800; font-size: 13px; margin-top: 4px;">CS 102: Data Structures</p>
+                            <p style="font-size: 11px; color: var(--pcc-muted);">7:30AM – 10:30 AM<br>COM LAB 401<br>Prof. Almenda Asuncion</p>
+                        </div>
+                        <div class="metric-card">
+                            <span style="font-size: 10px; color: var(--pcc-muted); font-weight: 700;">Attendance</span>
+                            <p style="font-weight: 800; font-size: 13px; color: green; margin-top: 4px;">ON TIME</p>
+                            <p style="font-size: 11px; color: var(--pcc-muted);">Time In: 7:30 AM<br>Time Out: 4:00 PM (Expected)</p>
+                        </div>
+                        <div class="metric-card">
+                            <span style="font-size: 10px; color: var(--pcc-muted); font-weight: 700;">Evaluation</span>
+                            <p style="font-weight: 800; font-size: 13px; margin-top: 4px;">JUNE 30, 2026</p>
+                            <p style="font-size: 11px; color: var(--pcc-muted);">4.6 / 5.0 ★★★★☆<br>Class Participation: 4.4/5<br>Assignment Quality: 4.6/5</p>
+                        </div>
+                        <div class="metric-card">
+                            <span style="font-size: 10px; color: var(--pcc-muted); font-weight: 700;">Next payday</span>
+                            <p style="font-weight: 800; font-size: 13px; margin-top: 4px;">JUNE 30, 2026</p>
+                            <p style="font-size: 11px; color: var(--pcc-muted);">Est. Net Amount: $2,450.00<br>Direct Deposit (****8812)</p>
+                        </div>
+                    </div>
+
+                    <div class="data-card" style="margin-top: 20px;">
+                        <span style="font-size: 11px; color: var(--pcc-maroon); font-weight: 700;">Our Story</span>
+                        <h2 style="font-size: 22px; font-weight: 800; margin-top: 4px;">Rooted in faith, shaped by service.</h2>
+                    </div>
+                </section>
+
+                <section id="tab-profile" class="tab-panel">
+                    <div class="profile-grid">
+                        <div class="prof-card-left">
+                            <span style="font-size: 10px; opacity: 0.8; font-weight: 700;">ADMINISTRATOR PROFILE</span>
+                            <br>
+                            <img id="p-img" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120" alt="Profile">
+                            <h3 id="p-name">Rizza Cuevas</h3>
+                            <p id="p-role" style="font-size: 12px; opacity: 0.8;">Human Resources Administrator</p>
+                            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-top: 16px;">
+                                <span style="font-size: 10px; opacity: 0.8;">Employee ID</span>
+                                <p style="font-size: 13px; font-weight: 800;">PCC HR-0198</p>
+                            </div>
+                            <button style="background: #FFF; color: var(--pcc-maroon); border: none; padding: 8px 16px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-top: 16px; cursor: pointer;">Change Password</button>
+                        </div>
+                        <div class="prof-card-right">
+                            <span style="font-size: 10px; color: var(--pcc-maroon); font-weight: 700;">PERSONAL INFORMATION</span>
+                            <h2 style="font-size: 20px; font-weight: 800; margin-top: 4px;">Profile details</h2>
+                            <div class="info-grid">
+                                <div><label style="font-size: 10px; color: var(--pcc-muted); font-weight: 700;">GENDER</label><p style="font-size: 13px; font-weight: 700;">Female</p></div>
+                                <div><label style="font-size: 10px; color: var(--pcc-muted); font-weight: 700;">BIRTHDAY</label><p style="font-size: 13px; font-weight: 700;">September 08 1989</p></div>
+                                <div><label style="font-size: 10px; color: var(--pcc-muted); font-weight: 700;">EMAIL ADDRESS</label><p id="p-email" style="font-size: 13px; font-weight: 700;">rizza.cuevas@pccnet.edu.ph</p></div>
+                                <div><label style="font-size: 10px; color: var(--pcc-muted); font-weight: 700;">MOBILE NUMBER</label><p style="font-size: 13px; font-weight: 700;">+63 917 555 0142</p></div>
+                                <div style="grid-column: span 2;"><label style="font-size: 10px; color: var(--pcc-muted); font-weight: 700;">HOME ADDRESS</label><p style="font-size: 13px; font-weight: 700;">Pasig City, Metro Manila</p></div>
+                            </div>
+                            <div style="background: #FCE8EF; padding: 14px; border-radius: 10px; margin-top: 20px; display: flex; align-items: center; gap: 12px;">
+                                <i class="fa-solid fa-shield-halved" style="color: var(--pcc-maroon); font-size: 20px;"></i>
+                                <div>
+                                    <span style="font-size: 10px; color: var(--pcc-maroon); font-weight: 700;">DEPARTMENT</span>
+                                    <h4 style="font-size: 13px; font-weight: 700;">Human Resources Office</h4>
+                                    <span style="font-size: 11px; color: var(--pcc-muted);">Pasig Catholic College</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tab-schedule" class="tab-panel">
+                    <div class="data-card">
+                        <span style="font-size: 10px; color: var(--pcc-maroon); font-weight: 700;">ACADEMIC LOAD</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 4px;">
+                            <div>
+                                <h3 style="font-size: 18px; font-weight: 800;">Class schedule</h3>
+                                <p style="font-size: 12px; color: var(--pcc-muted);">Assigned classes for the current academic period.</p>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <span style="font-size: 11px; background: #F0F0F0; padding: 6px 12px; border-radius: 6px; font-weight: 700;">School year: 2026-2027</span>
+                                <span style="font-size: 11px; background: #F0F0F0; padding: 6px 12px; border-radius: 6px; font-weight: 700;">Semester: 2nd semester</span>
+                            </div>
+                        </div>
+                        <table class="custom-table">
+                            <thead>
+                                <tr style="background: #FCE8EF;">
+                                    <th>Schedule</th><th>Instructor</th><th>Room</th><th>Program</th><th>Year</th><th>Section</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>MON 8:00–10:00 AM</strong></td><td>Almenda Asuncion</td><td>COM LAB 2</td><td>BSIT</td><td>3rd</td><td>E</td></tr>
+                                <tr><td><strong>MON 1:00–2:30 PM</strong></td><td>Almenda Asuncion</td><td>ROOM 305</td><td>BSIT</td><td>1st</td><td>C</td></tr>
+                                <tr><td><strong>TUE 9:30–11:00 AM</strong></td><td>Almenda Asuncion</td><td>ROOM 402</td><td>BSIT</td><td>2nd</td><td>B</td></tr>
+                                <tr><td><strong>WED 8:00–11:00 AM</strong></td><td>Almenda Asuncion</td><td>COM LAB 1</td><td>BSIT</td><td>1st</td><td>A</td></tr>
+                                <tr><td><strong>THU 10:00–11:30 AM</strong></td><td>Almenda Asuncion</td><td>ROOM 307</td><td>BSIT</td><td>4th</td><td>A</td></tr>
+                                <tr><td><strong>FRI 1:00–4:00 PM</strong></td><td>Almenda Asuncion</td><td>COM LAB 3</td><td>BSIT</td><td>2nd</td><td>E</td></tr>
+                            </tbody>
+                        </table>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; margin-top: 14px;">
+                            <span>Showing 6 assigned classes</span>
+                            <span>Lecture &nbsp;&nbsp; Laboratory</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tab-salary" class="tab-panel">
+                    <div class="demo-bar">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Demonstration payroll data Figures shown are samples and are not verified payroll records.</span>
+                    </div>
+
+                    <div class="data-card">
+                        <span style="font-size: 10px; color: var(--pcc-maroon); font-weight: 700;">COMPENSATION</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 4px;">
+                            <h3 style="font-size: 18px; font-weight: 800;">Salary management</h3>
+                            <button style="background: var(--pcc-maroon); color: #FFF; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">+ Add category</button>
+                        </div>
+                        <table class="custom-table">
+                            <thead>
+                                <tr style="background: #FCE8EF;">
+                                    <th>Category name</th><th>Amount</th><th>Distribution</th><th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Basic Salary</td><td><b>₱42,800</b></td><td><span style="background: #F0F0F0; padding: 4px 8px; border-radius: 4px; font-size: 10px;">Monthly</span></td><td><i class="fa-solid fa-trash" style="color: var(--pcc-maroon); cursor: pointer;"></i></td></tr>
+                                <tr><td>Program Head Allowance</td><td><b>₱6,500</b></td><td><span style="background: #F0F0F0; padding: 4px 8px; border-radius: 4px; font-size: 10px;">Monthly</span></td><td><i class="fa-solid fa-trash" style="color: var(--pcc-maroon); cursor: pointer;"></i></td></tr>
+                                <tr><td>Teaching Load</td><td><b>₱4,800</b></td><td><span style="background: #F0F0F0; padding: 4px 8px; border-radius: 4px; font-size: 10px;">Per semester</span></td><td><i class="fa-solid fa-trash" style="color: var(--pcc-maroon); cursor: pointer;"></i></td></tr>
+                                <tr><td>SADAS</td><td><b>₱102,312</b></td><td><span style="background: #F0F0F0; padding: 4px 8px; border-radius: 4px; font-size: 10px;">Monthly</span></td><td><i class="fa-solid fa-trash" style="color: var(--pcc-maroon); cursor: pointer;"></i></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="data-card">
+                        <span style="font-size: 10px; color: var(--pcc-maroon); font-weight: 700;">ADDITIONAL COMPENSATION</span>
+                        <h3 style="font-size: 18px; font-weight: 800; margin-top: 4px; margin-bottom: 12px;">Structured allowance and load</h3>
+                        <table class="custom-table">
+                            <thead>
+                                <tr style="background: #FCE8EF;">
+                                    <th>Category name</th><th>Category name</th><th>Category name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Internet allowance</td><td><b>₱1,500</b></td><td>Monthly</td></tr>
+                                <tr><td>Overload compensation</td><td><b>₱3,200</b></td><td>Per load</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="tab-employees" class="tab-panel">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                        <input type="text" placeholder="Search employee or role..." style="padding: 10px 14px; border: 1px solid var(--pcc-border); border-radius: 8px; font-size: 12px; width: 280px;">
+                        <button style="background: var(--pcc-maroon); color: #FFF; border: none; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">+ Add employee</button>
+                    </div>
+
+                    <div class="emp-grid">
+                        <div class="emp-card c-brown" onclick="switchUserRole('almenda')">
+                            <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120" alt="Almenda">
+                            <span style="font-size: 9px; opacity: 0.8; font-weight: 700;">PROGRAM HEAD</span>
+                            <h3 style="font-size: 16px; margin-top: 4px;">Almenda Asuncion</h3>
+                            <p style="font-size: 11px; opacity: 0.8;">BSIT Program Head</p>
+                        </div>
+                        <div class="emp-card c-purple" onclick="switchUserRole('june')">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120" alt="June">
+                            <span style="font-size: 9px; opacity: 0.8; font-weight: 700;">PROFFESOR</span>
+                            <h3 style="font-size: 16px; margin-top: 4px;">June Charanguero</h3>
+                            <p style="font-size: 11px; opacity: 0.8;">BSIT PROFFESOR</p>
+                        </div>
+                        <div class="emp-card c-green" onclick="switchUserRole('celine')">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120" alt="Celine">
+                            <span style="font-size: 9px; opacity: 0.8; font-weight: 700;">PROFFESOR</span>
+                            <h3 style="font-size: 16px; margin-top: 4px;">Celine Dormiendo</h3>
+                            <p style="font-size: 11px; opacity: 0.8;">BSIT PROFFESOR</p>
+                        </div>
+                    </div>
+
+                    <div style="background: #FCE8EF; border-radius: 10px; padding: 14px; margin-top: 20px; display: flex; align-items: center; gap: 12px;">
+                        <i class="fa-solid fa-shield-halved" style="color: var(--pcc-maroon); font-size: 20px;"></i>
+                        <div>
+                            <h4 style="font-size: 12px; font-weight: 700;">Protected employee directory</h4>
+                            <p style="font-size: 11px; color: var(--pcc-muted);">Personal records are visible only to authorized human resources staff.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tab-eval" class="tab-panel">
+                    <div class="demo-bar">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Demonstration evaluation data All ratings and comments are anonymized samples.</span>
+                    </div>
+
+                    <div class="eval-hero">
+                        <div>
+                            <span style="font-size: 10px; opacity: 0.8; font-weight: 700;">OVERALL PERFORMANCE</span>
+                            <h2 style="font-size: 22px; margin-top: 4px;">Exceeds expectations</h2>
+                            <p style="color: #F1C40F; margin-top: 4px;">★★★★★</p>
+                            <p style="font-size: 11px; opacity: 0.8; margin-top: 4px;">Based on 148 student responses</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 10px; opacity: 0.8; font-weight: 700;">Evaluation completion</span>
+                            <h2 style="font-size: 28px;">92%</h2>
+                            <div style="width: 160px; height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; margin-top: 6px;"><div style="width: 92%; height: 100%; background: #FFF; border-radius: 3px;"></div></div>
+                            <p style="font-size: 10px; opacity: 0.8; margin-top: 4px;">138 of 150 expected responses</p>
+                        </div>
+                    </div>
+
+                    <div class="data-card">
+                        <span style="font-size: 10px; color: var(--pcc-maroon); font-weight: 700;">CATEGORY BREAKDOWN</span>
+                        <h3 style="font-size: 18px; font-weight: 800; margin-top: 4px;">Performance ratings</h3>
+                        <p style="font-size: 12px; color: var(--pcc-muted); margin-bottom: 16px;">Select a category to update its score.</p>
+
+                        <div class="grid-3">
+                            <div class="eval-box"><div><p style="font-weight: 700; font-size: 12px;">Teaching Skills</p><p style="font-size: 10px; color: var(--pcc-muted);">Excellent</p></div><div class="eval-num">4.8</div></div>
+                            <div class="eval-box"><div><p style="font-weight: 700; font-size: 12px;">Feedback Quality</p><p style="font-size: 10px; color: var(--pcc-muted);">Very good</p></div><div class="eval-num">4.5</div></div>
+                            <div class="eval-box yellow"><div><p style="font-weight: 700; font-size: 12px;">Communication</p><p style="font-size: 10px; color: var(--pcc-muted);">Excellent</p></div><div class="eval-num">4.7</div></div>
+                            <div class="eval-box"><div><p style="font-weight: 700; font-size: 12px;">Feedback Evaluation</p><p style="font-size: 10px; color: var(--pcc-muted);">Very good</p></div><div class="eval-num">4.4</div></div>
+                            <div class="eval-box"><div><p style="font-weight: 700; font-size: 12px;">Classroom Management</p><p style="font-size: 10px; color: var(--pcc-muted);">Excellent</p></div><div class="eval-num">4.6</div></div>
+                            <div class="eval-box yellow"><div><p style="font-weight: 700; font-size: 12px;">Communication Management</p><p style="font-size: 10px; color: var(--pcc-muted);">Very good</p></div><div class="eval-num">4.5</div></div>
+                            <div class="eval-box"><div><p style="font-weight: 700; font-size: 12px;">Classroom Development</p><p style="font-size: 10px; color: var(--pcc-muted);">Excellent</p></div><div class="eval-num">4.7</div></div>
+                            <div class="eval-box"><div><p style="font-weight: 700; font-size: 12px;">Classroom Management</p><p style="font-size: 10px; color: var(--pcc-muted);">Very good</p></div><div class="eval-num">4.6</div></div>
+                            <div class="eval-box yellow"><div><p style="font-weight: 700; font-size: 12px;">Others</p><p style="font-size: 10px; color: var(--pcc-muted);">Very good</p></div><div class="eval-num">4.3</div></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tab-attendance" class="tab-panel">
+                    <div class="data-card">
+                        <span style="font-size: 10px; color: var(--pcc-maroon); font-weight: 700;">TIME & ATTENDANCE</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 4px;">
+                            <div>
+                                <h3 style="font-size: 18px; font-weight: 800;">Attendance records</h3>
+                                <p style="font-size: 12px; color: var(--pcc-muted);">Sample daily attendance history.</p>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" placeholder="search records Q" style="padding: 6px 12px; border: 1px solid var(--pcc-border); border-radius: 12px; font-size: 11px;">
+                                <select style="padding: 6px 12px; border: 1px solid var(--pcc-border); border-radius: 12px; font-size: 11px;"><option>all status</option></select>
+                            </div>
+                        </div>
+                        <table class="custom-table">
+                            <thead>
+                                <tr style="background: #FCE8EF;">
+                                    <th>Date</th><th>Time in</th><th>Employee</th><th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><b>MAY 16, 2026</b></td><td>7:42 AM</td><td>Almenda Asuncion</td><td><span class="badge-status st-present">Present</span></td></tr>
+                                <tr><td><b>MAY 17, 2026</b></td><td>7:55 AM</td><td>Almenda Asuncion</td><td><span class="badge-status st-present">Present</span></td></tr>
+                                <tr><td><b>JUNE 8, 2026</b></td><td>8:17 AM</td><td>Almenda Asuncion</td><td><span class="badge-status st-late">Late</span></td></tr>
+                                <tr><td><b>JUNE 12, 2026</b></td><td>7:39 AM</td><td>Almenda Asuncion</td><td><span class="badge-status st-present">Present</span></td></tr>
+                                <tr><td><b>JUNE 23, 2026</b></td><td>9:30 AM</td><td>Almenda Asuncion</td><td><span class="badge-status st-late">Late</span></td></tr>
+                                <tr><td><b>JULY 01, 2026</b></td><td>-----------</td><td>Almenda Asuncion</td><td><span class="badge-status st-leave">On leave</span></td></tr>
+                            </tbody>
+                        </table>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; margin-top: 14px;">
+                            <span>Showing 6 assigned classes</span>
+                            <span>Lecture &nbsp;&nbsp; Laboratory</span>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="m-leave">
+        <div class="modal-card">
+            <div class="modal-head">
+                <i class="fa-solid fa-bell" style="font-size: 20px;"></i>
+                <div>
+                    <span style="font-size: 10px; font-weight: 700;">Leave Request</span>
+                    <h4 style="font-size: 15px; font-weight: 800;">Sick Leave Request</h4>
+                    <p style="font-size: 10px;">10 mins ago • From Juan Dela Cruz (Senior High Faculty)</p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p>Submitted a sick leave application for 2 consecutive days (Oct 24 - Oct 25, 2026). Medical certificate attached.</p>
+                <br>
+                <p><strong>Leave Type:</strong> Sick Leave</p>
+                <p><strong>Duration:</strong> 2 Days (Oct 24-25)</p>
+                <p><strong>Substitute Assigned:</strong> Maria Santos</p>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-modal btn-close" onclick="closeModal('m-leave')">Reject Request</button>
+                <button class="btn-modal btn-approve" onclick="approveLeaveRequest()">Approve Request</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="m-anomaly">
+        <div class="modal-card">
+            <div class="modal-head">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 20px;"></i>
+                <div>
+                    <span style="font-size: 10px; font-weight: 700;">Attendance</span>
+                    <h4 style="font-size: 15px; font-weight: 800;">Attendance Anomaly Alert</h4>
+                    <p style="font-size: 10px;">1 hour ago • From System Attendance Monitor (Automation)</p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p>High late frequency detected: 5 faculty members logged in after 8:00 AM standard threshold today.</p>
+                <br>
+                <p><strong>Department:</strong> College Dept</p>
+                <p><strong>Threshold:</strong> 8:00 AM</p>
+                <p><strong>Flagged Records:</strong> 5 Staff</p>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-modal btn-close" onclick="closeModal('m-anomaly')">Closed</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="m-eval">
+        <div class="modal-card">
+            <div class="modal-head">
+                <i class="fa-solid fa-chart-line" style="font-size: 20px;"></i>
+                <div>
+                    <span style="font-size: 10px; font-weight: 700;">Evaluation</span>
+                    <h4 style="font-size: 15px; font-weight: 800;">Q4 Performance Evaluation Due</h4>
+                    <p style="font-size: 10px;">3 hours ago • From PCC HR System (Evaluation Board)</p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p>Quarterly performance evaluation for administrative personnel is due in 3 days. Please review submitted self-assessments.</p>
+                <br>
+                <p><strong>Target Dept:</strong> Administrative Personnel</p>
+                <p><strong>Deadline:</strong> Oct 22, 2026</p>
+                <p><strong>Completed:</strong> 18/25 Forms</p>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-modal btn-close" onclick="closeModal('m-eval')">Closed</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="m-memo">
+        <div class="modal-card">
+            <div class="modal-head">
+                <i class="fa-solid fa-bullhorn" style="font-size: 20px;"></i>
+                <div>
+                    <span style="font-size: 10px; font-weight: 700;">Announcement</span>
+                    <h4 style="font-size: 15px; font-weight: 800;">General Faculty Meeting Memorandum</h4>
+                    <p style="font-size: 10px;">5 hours ago • From Office of the Vice President (Academic Affairs)</p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p>All faculty members are requested to attend the Mid-Semester Sync on Friday at St. Joseph Auditorium.</p>
+                <br>
+                <p><strong>Venue:</strong> St. Joseph Auditorium</p>
+                <p><strong>Date & Time:</strong> Friday, 2:00 PM</p>
+                <p><strong>Mandatory:</strong> Yes</p>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-modal btn-close" onclick="closeModal('m-memo')">Closed</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="m-sec">
+        <div class="modal-card">
+            <div class="modal-head">
+                <i class="fa-solid fa-shield-halved" style="font-size: 20px;"></i>
+                <div>
+                    <span style="font-size: 10px; font-weight: 700;">System</span>
+                    <h4 style="font-size: 15px; font-weight: 800;">Security Policy Update</h4>
+                    <p style="font-size: 10px;">1 day ago • From PCC IT Security Team (System Admin)</p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p>PCC Secure portal updated to version 3.4. Two-Factor Authentication (2FA) is now required for HR administrators.</p>
+                <br>
+                <p><strong>Version:</strong> v3.4.0</p>
+                <p><strong>Security Level:</strong> High</p>
+                <p><strong>Action Required:</strong> Enable 2FA in Settings</p>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-modal btn-close" onclick="closeModal('m-sec')">Closed</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="m-vacleave">
+        <div class="modal-card">
+            <div class="modal-head">
+                <i class="fa-solid fa-plane" style="font-size: 20px;"></i>
+                <div>
+                    <span style="font-size: 10px; font-weight: 700;">Leave Request</span>
+                    <h4 style="font-size: 15px; font-weight: 800;">Vacation Leave Approved</h4>
+                    <p style="font-size: 10px;">2 days ago • From Elena Rostata (Library Staff)</p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p>Vacation leave application for Nov 2-4 has been automatically logged and approved by Dept Head.</p>
+                <br>
+                <p><strong>Status:</strong> Approved</p>
+                <p><strong>Days:</strong> 3 Days</p>
+                <p><strong>Approved By:</strong> Dept Chair</p>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-modal btn-close" onclick="closeModal('m-vacleave')">Closed</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-notif" id="toastMsg">
+        <i class="fa-solid fa-circle-check" style="font-size: 18px;"></i>
+        <span>Sick Leave Request has been approved!</span>
+    </div>
+
+    <script>
+        const screenSplash = document.getElementById('screen-splash');
+        const screenLogin = document.getElementById('screen-login');
+        const screenPortal = document.getElementById('screen-portal');
+
+        document.getElementById('btnGetStarted').onclick = () => { screenSplash.classList.remove('active'); screenLogin.classList.add('active'); };
+        document.getElementById('loginForm').onsubmit = (e) => { e.preventDefault(); screenLogin.classList.remove('active'); screenPortal.classList.add('active'); };
+        document.getElementById('btnLogout').onclick = () => { screenPortal.classList.remove('active'); screenLogin.classList.add('active'); switchUserRole('rizza'); };
+
+        document.getElementById('togglePass').onclick = function() {
+            const passInput = document.getElementById('passInput');
+            const isPw = passInput.getAttribute('type') === 'password';
+            passInput.setAttribute('type', isPw ? 'text' : 'password');
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        };
+
+        const navItems = document.querySelectorAll('.nav-item[data-tab]');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        navItems.forEach(item => item.onclick = () => {
+            navItems.forEach(n => n.classList.remove('active'));
+            tabPanels.forEach(p => p.classList.remove('active'));
+            item.classList.add('active');
+            document.getElementById(item.dataset.tab).classList.add('active');
+            document.getElementById('pageTitle').textContent = item.textContent.trim();
+        });
+
+        const btnNotifTrigger = document.getElementById('btnNotifTrigger');
+        const notifMenu = document.getElementById('notifMenu');
+
+        btnNotifTrigger.onclick = (e) => { e.stopPropagation(); notifMenu.classList.toggle('active'); };
+        document.onclick = () => notifMenu.classList.remove('active');
+
+        function openModal(modalId) {
+            notifMenu.classList.remove('active');
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function approveLeaveRequest() {
+            closeModal('m-leave');
+            const toast = document.getElementById('toastMsg');
+            toast.classList.add('active');
+            setTimeout(() => toast.classList.remove('active'), 3200);
+        }
+
+        function switchUserRole(userKey) {
+            const users = {
+                rizza: { name: 'Rizza Cuevas', role: 'HR Administrator', img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120', email: 'rizza.cuevas@pccnet.edu.ph', isHR: true },
+                almenda: { name: 'Almenda Asuncion', role: 'BSIT Program Head', img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120', email: 'almenda.asuncion@pccnet.edu.ph', isHR: false },
+                june: { name: 'June Charanguero', role: 'BSIT PROFFESOR', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120', email: 'june.charanguero@pccnet.edu.ph', isHR: false },
+                celine: { name: 'Celine Dormiendo', role: 'BSIT PROFFESOR', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120', email: 'celine.dormiendo@pccnet.edu.ph', isHR: false }
+            };
+
+            const user = users[userKey];
+            document.getElementById('usr-name').textContent = user.name;
+            document.getElementById('usr-role').textContent = user.role;
+            document.getElementById('usr-img').src = user.img;
+            document.getElementById('usr-top-img').src = user.img;
+            document.getElementById('p-name').textContent = user.name;
+            document.getElementById('p-role').textContent = user.role;
+            document.getElementById('p-img').src = user.img;
+            document.getElementById('p-email').textContent = user.email;
+
+            if(!user.isHR) {
+                document.getElementById('welcomeText').innerHTML = `Good morning, ${user.name.split(' ')[0]}.`;
+                document.getElementById('pageTitle').textContent = 'My dashboard';
+                document.getElementById('pageSub').textContent = 'Your workday, all in one place.';
+                document.getElementById('admin-metrics').style.display = 'none';
+                document.getElementById('faculty-cards').style.display = 'grid';
+                document.getElementById('m-salary').style.display = 'block';
+                document.getElementById('m-profile').style.display = 'none';
+                document.getElementById('m-emp').style.display = 'none';
+            } else {
+                document.getElementById('welcomeText').innerHTML = `WELCOME TO<br>PCC Secure`;
+                document.getElementById('pageTitle').textContent = 'Command Center';
+                document.getElementById('pageSub').textContent = 'Here\'s what is happening across PCC today.';
+                document.getElementById('admin-metrics').style.display = 'grid';
+                document.getElementById('faculty-cards').style.display = 'none';
+                document.getElementById('m-salary').style.display = 'none';
+                document.getElementById('m-profile').style.display = 'block';
+                document.getElementById('m-emp').style.display = 'block';
+            }
+
+            document.querySelector('.nav-item[data-tab="tab-home"]').click();
+        }
+    </script>
+</body>
+</html>
